@@ -71,9 +71,10 @@ Open gcc.txt for build reference
 
 Build Reference
 
+```
 aarch64-linux-android-clang -shared -fPIC -o liblmlogin.so \  
 lmlogin.c libxhook/xhook.c libxhook/xh_*.c \  
 -I./libxhook -llog -ldl  
-  
+```
 
 After building shared library you should inject the library in game; and login your account in game; when you login your game account the library will dump session credentials into /sdcard/lmlogin folder!
