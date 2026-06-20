@@ -71,7 +71,7 @@ Open gcc.txt for build reference
 
 Build Reference
 
-```
+```shell
 aarch64-linux-android-clang -shared -fPIC -o liblmlogin.so \  
 lmlogin.c libxhook/xhook.c libxhook/xh_*.c \  
 -I./libxhook -llog -ldl  
