@@ -62,7 +62,7 @@ const char *login1_file = "/sdcard/lmbot/login/MSG_NEWLOGIN_LOGINTOL.bin";
 const char *login2_file = "/sdcard/lmbot/login/MSG_NEWLOGIN_LOGINTOP.bin";
 ```
 
-## Usage
+## Login Files
 
 Extract the lmlogin.zip file
 
