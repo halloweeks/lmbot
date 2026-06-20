@@ -23,6 +23,14 @@ The goal is experimentation and learning, not production-level software.
 
 ---
 
+## Personal Note
+
+I previously had a better and more advanced version of this bot, but I accidentally lost the source code.
+
+This is my first protocol that I built completely by myself from scratch, and I am still rebuilding and improving it step by step.
+
+---
+
 ## Current Status
 
 - ✔ Working prototype
