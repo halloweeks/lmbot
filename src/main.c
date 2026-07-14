@@ -94,19 +94,6 @@ uint8_t GetVIPLevel(uint32_t vipPoints)
 	return 1;
 }
 
-/*
-
-
-[INFO ] PACKET TYPE: _MSG_RESP_ADDCONFLICT_LINE (0x98B), size=15
-
-
-
-[INFO ] PACKET TYPE: _MSG_RESP_DELCONFLICT_LINE (0x98C), size=5
-[INFO ] PACKET TYPE: _MSG_RESP_BUFFCOMPLETE (0x458), size=6
-[INFO ] PACKET TYPE: _MSG_RESP_GATHERINGEVENT (0x975), size=22
-*/
-
-
 void ProcessConnection(Connection *c)
 {
 	PacketStream *s = &c->stream;
@@ -361,6 +348,7 @@ void ProcessConnection(Connection *c)
 }
  
 
+// Configuration settings 
 void Configuration(Connection *client)
 {
 	
@@ -488,13 +476,25 @@ int main(int argc, const char *argv[]) {
 	Configuration(&client);
 	
 	// Load account credentials from file
-	// AccountError err = LoadAccount(&client, "/sdcard/lmbot/new_account.bin");
+	// AccountError err = LoadAccount(&client, "./lmbot/new_account.bin");
 	AccountError err = LoadAccount(&client, argv[1]);
 	
 	if (err != ACC_OK) {
 		LOGE("LoadAccount failed: %s", AccountErrorStr(err));
 		return EXIT_FAILURE;
 	}
+	
+	
+	// If you don't use a serialized account file, you can initialize the
+	// authentication information manually before connecting.
+	//
+	// Required fields:
+	//   client.auth.igg_id        = Your IGG account ID (uint64_t)
+	//   client.auth.device_uuid   = Device UUID (copy with memcpy)
+	//   client.auth.session_len   = Session length in bytes
+	//   client.auth.session       = Session token received after login (copy using memcpy)
+	//
+	// This allows you to authenticate without calling LoadAccount().
 	
 	// Establish TCP connection to server and store socket descriptor in client
 	client.sock = connect_server(SERVER_ADDR, SERVER_PORT);
