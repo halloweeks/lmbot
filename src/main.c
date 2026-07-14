@@ -113,28 +113,6 @@ void ProcessConnection(Connection *c)
 	
 	map_pos_t pos;
 	
-	PointCode point;
-	
-	bool sent = true;
-	uint8_t b = 0;
-	uint8_t *data = NULL;
-	uint16_t offset = 0;
-	time_t last_update = time(NULL);
-	time_t last_use = time(NULL);
-	
-	uint16_t temp = 0;
-	
-	uint16_t item_id = 0;
-	uint16_t key = 0;
-	
-	
-	bool fetch_map = true;
-	uint16_t zone[4] = {0};
-	
-	uint16_t type = 0;
-	uint16_t i = 1;
-	
-	
 	while (1) {
 		// Tick 
 		BotTick(c);
