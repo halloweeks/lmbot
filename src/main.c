@@ -70,7 +70,7 @@ void BotTick(Connection *c)
 	AllianceGiftTick(c);
 	
 	// 
-	DarknestRallyTick(c);
+	// DarknestRallyTick(c);
 	
 }
 
