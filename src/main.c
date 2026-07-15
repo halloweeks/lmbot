@@ -371,7 +371,8 @@ void Configuration(Connection *client)
 	client->app.version_patch = 307;
 	client->app.language_code = 1;   // g_config.language_code;
 	
-	// Automatically purchase desired Black Market items.
+	
+	// Automatically purchase desired Black Market (Cargo ship) items.
 	client->market.settings.auto_trade = true;
 	
 	// Minimum resources to keep after market purchases.
@@ -428,17 +429,30 @@ void Configuration(Connection *client)
 	client->protection.recall_on_incoming_conflict = true;
 	
 	
-	//
+	
 	// client->protection.shelter_on_incoming_attack = true;
 	// client->protection.shelter_on_incoming_scout = true;
 	
 	/*
 	 * Darknest Configuration 
+	 * Automatic Darknest settings
 	 * Currently core logic not implemented yet
 	 */ 
 	client->darknest.auto_join = true;
 	client->darknest.min_level = 4;
 	client->darknest.max_level = 6;
+	
+	// Maximum number of marches the bot can use for Darknest rallies at the same time (if available)
+	client->darknest.max_march = 2;
+	
+	// Automatically set Darknest essence in Transmutation Lab
+	client->darknest.auto_transmute = true;
+	
+	// Desired essence level
+	client->darknest.essence_level = 18;
+	
+	// Do not join if the rally host is more than 200 miles away.
+	client->darknest.max_distance = 200; 
 	
 	// Total troops to send when joining Darknest rally.
 	client->darknest.troop_count = 200000;

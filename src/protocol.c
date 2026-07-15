@@ -3188,6 +3188,9 @@ void RecvNPCWallHallData(Connection *c, const uint8_t *data) {
 	
 	
 	NPCRallyLog(&c->npc_rallies[index]);
+	
+	
+	// RequestRallyDetail(c, 0, index);
 	return;
 	
 	map_pos_t pos = getTileMapPosbyPointCode(c->npc_rallies[index].ally_zone_id, c->npc_rallies[index].ally_point_id);
@@ -3348,51 +3351,49 @@ void RecvWallHallDetail(Connection *c, const uint8_t *data) {
 void RecvWallHallTroop(Connection *c, const uint8_t *data) {
 	uint16_t offset = 0;
 	
+	uint32_t index = read_u32(data + offset); offset += 4;
 	
-	char ally_name[13];
-	uint32_t troops[20];
-	uint32_t troops_total = 0;
+	if (index >= 30) return;
 	
-	uint32_t num1 = read_u32(data + offset); offset += 4;
+	read_raw(c->rally_members[index].name, data + offset, 13); offset += 13;
 	
-	read_raw(ally_name, data + offset, 13); offset += 13;
-	
-	uint8_t ally_vip      = read_u8 (data + offset); offset += 1;
-	uint8_t ally_rank     = read_u8 (data + offset); offset += 1;
+	c->rally_members[index].vip      = read_u8 (data + offset); offset += 1;
+	c->rally_members[index].rank     = read_u8 (data + offset); offset += 1;
 	
 	
-	int64_t  begin_time   = read_i64(data + offset); offset += 8;
-	uint32_t require_time = read_u32(data + offset); offset += 4;
+	c->rally_members[index].begin_time   = read_i64(data + offset); offset += 8;
+	c->rally_members[index].require_time = read_u32(data + offset); offset += 4;
 	
 	// unknown 
+	// i don't know about this maybe mana troop or sigils flags
 	offset += 6;
 	
 	uint32_t troop_flag   = read_u32(data + offset); offset += 4;
 	
-	for (int index = 0; index < 20; index++) {
-		if ((troop_flag >> index) & 1) {
-			troops[index] = read_u32(data + offset); offset += 4;
-			troops_total += troops[index];
+	for (int i = 0; i < 20; i++) {
+		if ((troop_flag >> i) & 1) {
+			c->rally_members[index].troops[i] = read_u32(data + offset); offset += 4;
+			c->rally_members[index].troop_total += c->rally_members[index].troops[i];
 		} else {
-			troops[index] = 0;
+			c->rally_members[index].troops[i] = 0;
 		}
 	}
 	
-	printf("[RALLY] Index  : %u\n", num1);
-	printf("[RALLY] Name   : %s\n", ally_name);
-	printf("[RALLY] VIP    : %u\n", ally_vip);
-	printf("[RALLY] Rank   : %u\n", ally_rank);
-	printf("[RALLY] Troops : %u\n", troops_total);
-	printf("[RALLY] Btime  : %ld\n", begin_time);
-	printf("[RALLY] RTime  : %us\n", require_time);
+	printf("[RALLY] Index  : %u\n",  index);
+	printf("[RALLY] Name   : %s\n",  c->rally_members[index].name);
+	printf("[RALLY] VIP    : %u\n",  c->rally_members[index].vip);
+	printf("[RALLY] Rank   : %u\n",  c->rally_members[index].rank);
+	printf("[RALLY] Troop  : %u\n",  c->rally_members[index].troop_total);
+	printf("[RALLY] Btime  : %ld\n", c->rally_members[index].begin_time);
+	printf("[RALLY] RTime  : %us\n", c->rally_members[index].require_time);
 	
 	for (int tier = 0; tier < 20; tier++) {
-		if (troops[tier] == 0)
+		if (c->rally_members[index].troops[tier] == 0)
 			continue;
 		
 		printf("[RALLY] %-11s : %u\n",
 			TroopNameByIndex(tier),
-			troops[tier]);
+			c->rally_members[index].troops[tier]);
 	}
 	
 	printf("\n");
@@ -3451,6 +3452,7 @@ void WarRallyLog(Rally *r) {
 	}
 }
 
+// War rally information 
 void RecvWallHallData(Connection *c, const uint8_t *data) {
 	uint16_t offset = 0;
 	
@@ -3460,6 +3462,7 @@ void RecvWallHallData(Connection *c, const uint8_t *data) {
 	uint8_t  type    =  read_u8 (data + offset); offset += 1;
 	uint32_t index   =  read_u32(data + offset); offset += 4;
 	
+	if (type > 1) return;
 	if (index >= 30) return;
 	
 	if (type == 0) {
@@ -3473,27 +3476,27 @@ void RecvWallHallData(Connection *c, const uint8_t *data) {
 	r->type         = type;
 	r->index        = index;
 	
-	r->kind         = read_u8 (data + offset); offset += 1;
-	r->begin_time   = read_i64(data + offset); offset += 8;
-	r->require_time = read_u32(data + offset); offset += 4;
-	r->ally_zone_id = read_u16(data + offset); offset += 2;
-	r->ally_point_id = read_u8(data + offset);  offset += 1;
-	r->ally_head    = read_u16(data + offset); offset += 2;
+	r->kind            = read_u8 (data + offset); offset += 1;
+	r->begin_time      = read_i64(data + offset); offset += 8;
+	r->require_time    = read_u32(data + offset); offset += 4;
+	r->ally_zone_id    = read_u16(data + offset); offset += 2;
+	r->ally_point_id   = read_u8(data + offset);  offset += 1;
+	r->ally_head       = read_u16(data + offset); offset += 2;
 	read_raw(r->ally_name, data + offset, 13); offset += 13;
-	r->ally_vip      = read_u8 (data + offset); offset += 1;
-	r->ally_rank     = read_u8 (data + offset); offset += 1;
+	r->ally_vip        = read_u8 (data + offset); offset += 1;
+	r->ally_rank       = read_u8 (data + offset); offset += 1;
 	
 	
 	r->ally_curr_troop = read_u32(data + offset); offset += 4;
-	r->ally_max_troop = read_u32(data + offset); offset += 4;
+	r->ally_max_troop  = read_u32(data + offset); offset += 4;
 	
-	r->enemy_zone_id  = read_u16(data + offset); offset += 2;
-	r->enemy_point_id = read_u8 (data + offset); offset += 1;
-	r->enemy_head     = read_u16(data + offset); offset += 2;
+	r->enemy_zone_id   = read_u16(data + offset); offset += 2;
+	r->enemy_point_id  = read_u8 (data + offset); offset += 1;
+	r->enemy_head      = read_u16(data + offset); offset += 2;
 	read_raw(r->enemy_name, data + offset, 13); offset += 13;
 	
-	r->enemy_vip   = read_u8(data + offset); offset += 1;
-	r->enemy_rank   = read_u8(data + offset); offset += 1;
+	r->enemy_vip       = read_u8(data + offset); offset += 1;
+	r->enemy_rank      = read_u8(data + offset); offset += 1;
 	
 	read_raw(r->enemy_alliance_tag, data + offset, 3); offset += 3;
 	

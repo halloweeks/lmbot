@@ -584,6 +584,11 @@ typedef struct {
     // Join only Darknest levels within this range.
     uint8_t min_level;
     uint8_t max_level;
+    uint8_t max_march;
+    
+    uint16_t max_distance;
+    bool auto_transmute;
+    uint8_t essence_level;
 
     // Total troops to send.
     uint32_t troop_count;
@@ -641,6 +646,16 @@ typedef struct {
 
 
 typedef struct {
+    char     name[13];
+    uint8_t  vip;
+    uint8_t  rank;
+    int64_t  begin_time;
+    uint32_t require_time;
+    uint32_t troop_total;
+    uint32_t troops[20];
+} RallyMember;
+
+typedef struct {
     uint32_t index;             // Rally index/id.
     uint8_t  kind;              // Rally type.
 
@@ -672,33 +687,32 @@ typedef struct {
 typedef struct {
 	uint8_t  type;
 	uint32_t index;
-    uint8_t  kind;
-
-    int64_t  begin_time;
-    uint32_t require_time;
-
-    /* Rally leader */
-    uint16_t ally_zone_id;
-    uint8_t  ally_point_id;
-    uint16_t ally_head;
-    char     ally_name[13];
-    uint8_t  ally_vip;
-    uint8_t  ally_rank;
-
-    uint32_t ally_curr_troop;
-    uint32_t ally_max_troop;
-
-    /* Rally target */
-    uint16_t enemy_zone_id;
-    uint8_t  enemy_point_id;
-    uint16_t enemy_head;
-    char     enemy_name[13];
-    uint8_t  enemy_vip;
-    uint8_t  enemy_rank;
-
-    char     enemy_alliance_tag[4]; // +1 for '\0'
-    uint16_t enemy_home_kingdom;
-
+	uint8_t  kind;
+	
+	int64_t  begin_time;
+	uint32_t require_time;
+	
+	/* Rally leader */
+	uint16_t ally_zone_id;
+	uint8_t  ally_point_id;
+	uint16_t ally_head;
+	char     ally_name[13];
+	uint8_t  ally_vip;
+	uint8_t  ally_rank;
+	
+	uint32_t ally_curr_troop;
+	uint32_t ally_max_troop;
+	
+	/* Rally target */
+	uint16_t enemy_zone_id;
+	uint8_t  enemy_point_id;
+	uint16_t enemy_head;
+	char     enemy_name[13];
+	uint8_t  enemy_vip;
+	uint8_t  enemy_rank;
+	
+	char     enemy_alliance_tag[4]; // +1 for '\0'
+	uint16_t enemy_home_kingdom;
 } Rally;
 
 
@@ -795,6 +809,8 @@ typedef struct {
 	
 	Rally ally_rallies[30];     // Rallies opened by our alliance.
 	Rally enemy_rallies[30];    // Enemy rallies targeting us.
+	
+	RallyMember rally_members[30];
 } Connection;
 
 /* API */
