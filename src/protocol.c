@@ -699,6 +699,10 @@ void RequestDeleteAllianceGiftBox(Connection *c, uint32_t sn) {
 	send_packet(c, true);
 }
 
+/*
+ * Returns troops that have already reached their destination
+ * (e.g. gathering, camping, or reinforcing) back to the castle.
+ */
 void RequestTroopTakeBack(Connection *c, uint8_t Index) {
 	c->size = 2;
 	
@@ -719,6 +723,10 @@ void RequestTroopTakeBack(Connection *c, uint8_t Index) {
     send_packet(c, true);
 }
 
+/*
+ * Recalls a march before it reaches its destination.
+ * Requires a Withdraw Squad item.
+ */
 void RequestTroopRecall(Connection *c, uint8_t Index) {
 	c->size = 2; // reserve space for packet length
 	
@@ -2187,7 +2195,7 @@ void RecvAllianceGiftInfo(Connection *c, const uint8_t *data) {
 	
 	uint8_t gift_count = read_u8(data + offset); offset += 1;
 	
-	if (gift_count == 0) return;
+	// if (gift_count == 0) return;
 	
 	AllianceGift2 gift;
 	
@@ -2200,6 +2208,13 @@ void RecvAllianceGiftInfo(Connection *c, const uint8_t *data) {
 		gift.num         =    read_u16(data + offset); offset += 2;
 		gift.item_rank   =    read_u8(data + offset); offset += 1;
 		read_raw(gift.player, data + offset, 13); offset += 13;
+		
+		/*
+		printf("Opened gift\n");
+		printf("item id: %u\n", gift.item_id);
+		printf("num: %u\n", gift.num);
+		printf("name: %s\n", gift.player);
+		*/
 		
 		if (gift.status != 0) continue; // ignore already opened or expired gift;
 		

@@ -477,6 +477,7 @@ int main(int argc, const char *argv[]) {
 	
 	// Load account credentials from file
 	// AccountError err = LoadAccount(&client, "./lmbot/new_account.bin");
+	
 	AccountError err = LoadAccount(&client, argv[1]);
 	
 	if (err != ACC_OK) {
@@ -495,6 +496,12 @@ int main(int argc, const char *argv[]) {
 	//   client.auth.session       = Session token received after login (copy using memcpy)
 	//
 	// This allows you to authenticate without calling LoadAccount().
+	// Example test account 
+	// client.auth.igg_id = 2147586080;
+	// memcpy(client.auth.device_uuid, "6f694273-67c2-46c5-a498-501dd571c97a", 36);
+	// memcpy(client.auth.session, "eyJha2lkIjoyMDIxMDQyMiwicmtpZCI6MjAyMTA0MjMsImciOjEwNTEwMjk5MDIsInYiOjN9.rXr4A-8Muc8e5BWKhenJxRjwE-AubCJdOrf-BK5ZKBrpTSMhQSzj6zl58iXtRx9tqFuiUE-U3HybJzEADQXBcasgzgmmeWyyvv1KaH38Nkv8N_H9hb2vmldT5eqUmy4EhKHhosA4_uzb0FLqgAEgarae0x3IhnXR9Dig1O0iL3nel1G6THZjKyLW9YpVgAI7.Iz1RKOmxuZ6sop6dJT3DQpdSkl2Ps_OUzSTrv0E0EUFey21GTW0P5sGW7V7jJrR7PLbishKLzqROgHBck8xtG7lld4bGwASHMtj-_5oU8S0OsWfTs_nkPW6S_5M-NzX1fk-alygFptbnhScpIkGQ_quH5_g1NaI4T8dwcfAMY50", 437);
+	// client.auth.session_len = (uint16_t)strlen(client.auth.session);
+	
 	
 	// Establish TCP connection to server and store socket descriptor in client
 	client.sock = connect_server(SERVER_ADDR, SERVER_PORT);

@@ -133,9 +133,9 @@ typedef struct {
 
 typedef struct {
     int64_t igg_id;
-    uint8_t device_uuid[50];
+    char device_uuid[50];
     uint16_t session_len;
-    uint8_t session[512];
+    char session[512];
 } AuthInfo;
 
 typedef struct {
