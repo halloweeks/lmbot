@@ -13,9 +13,12 @@ void RequestTroopTraining(Connection *c, uint8_t kind, uint8_t tier, uint32_t am
 
 void RequestTroopRecall(Connection *c, uint8_t Index);
 
+
+void RequestRallyList(Connection *c);
+void RequestRallyDetail(Connection *c, uint8_t arg1, uint32_t arg2);
+
 void RequestJoinRally(Connection *c, const char *ally_name, const uint32_t troop_array[16]);
 
-void RequestWarHallListDetail(Connection *c, uint8_t arg1, uint32_t arg2);
 
 void Send_Mall_TestBuy(Connection *c, uint16_t type);
 
@@ -29,7 +32,6 @@ void SendBlackMarketBuy(Connection *c, uint8_t mIdx);
 void RequestMissionInfo(Connection *c, uint8_t missionType);
 void RequestAllyPoint(Connection *c, const char *name);
 
-void RequestWarHallList(Connection *c);
 void RequestWatchTowerLineDetail(Connection *c, uint32_t);
 void RequestTroopTakeBack(Connection*, uint8_t);
 
@@ -88,6 +90,7 @@ void RecvBuyItem(Connection *c, const uint8_t *data, uint16_t size);
 void RecvArmyGroupInfo(Connection *c, const uint8_t *data);
 void RecvWoundedTroopData(Connection *c, const uint8_t *data);
 
+void RecvRefreshResources(Connection *c, const uint8_t *data);
 
 void HeartbeatTick(Connection *c);
 void BlackMarketTick(Connection *c);

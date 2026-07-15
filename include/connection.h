@@ -639,6 +639,69 @@ typedef struct {
 	double update_timer;         // 1-second update accumulator.
 } ResourceTracker;
 
+
+typedef struct {
+    uint32_t index;             // Rally index/id.
+    uint8_t  kind;              // Rally type.
+
+    int64_t  begin_time;        // Rally start time.
+    uint32_t require_time;      // Time until march starts.
+
+    /* Rally leader */
+    uint16_t ally_zone_id;
+    uint8_t  ally_point_id;
+    uint16_t ally_head;
+    char     ally_name[13];
+    uint8_t  ally_vip;
+    uint8_t  ally_rank;
+
+    uint32_t ally_curr_troop;
+    uint32_t ally_max_troop;
+
+    uint16_t ally_home_kingdom;
+
+    /* Target (Darknest) */
+    uint16_t enemy_head;        // Always UINT16_MAX for NPC rallies.
+    uint16_t enemy_zone_id;
+    uint8_t  enemy_point_id;
+    uint8_t  enemy_vip;
+    uint16_t enemy_npc_id;
+
+} NPCRally;
+
+typedef struct {
+	uint8_t  type;
+	uint32_t index;
+    uint8_t  kind;
+
+    int64_t  begin_time;
+    uint32_t require_time;
+
+    /* Rally leader */
+    uint16_t ally_zone_id;
+    uint8_t  ally_point_id;
+    uint16_t ally_head;
+    char     ally_name[13];
+    uint8_t  ally_vip;
+    uint8_t  ally_rank;
+
+    uint32_t ally_curr_troop;
+    uint32_t ally_max_troop;
+
+    /* Rally target */
+    uint16_t enemy_zone_id;
+    uint8_t  enemy_point_id;
+    uint16_t enemy_head;
+    char     enemy_name[13];
+    uint8_t  enemy_vip;
+    uint8_t  enemy_rank;
+
+    char     enemy_alliance_tag[4]; // +1 for '\0'
+    uint16_t enemy_home_kingdom;
+
+} Rally;
+
+
 typedef struct {
 	// network
 	int sock;
@@ -727,6 +790,11 @@ typedef struct {
 	uint32_t supply_capacity;
 	
 	ResourceTracker tracker;
+	
+	NPCRally npc_rallies[30]; // maximum 30 npc rallies hold
+	
+	Rally ally_rallies[30];     // Rallies opened by our alliance.
+	Rally enemy_rallies[30];    // Enemy rallies targeting us.
 } Connection;
 
 /* API */

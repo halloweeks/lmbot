@@ -199,7 +199,7 @@ void ProcessConnection(Connection *c)
 					printf("gems: %u\n", c->player.gems);
 					break;
 				case _MSG_RESP_UPDATE_RESOURCEAMOUNT: 
-					LOGI("_MSG_RESP_UPDATE_RESOURCEAMOUNT");
+					RecvRefreshResources(c, s->buffer + s->parse_pos + 4);
 					break;
 				case _MSG_RESP_RESOURCEINFO: 
 					RecvResources(c, s->buffer + s->parse_pos + 4);
