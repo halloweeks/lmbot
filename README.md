@@ -1,4 +1,11 @@
-# Help Wanted – Contributors Needed
+## About the Project
+
+This project is a modular, high-performance Lords Mobile bot written in C. It is designed with a focus on clean architecture, efficient packet processing, and configurable automation.
+
+The project is currently under active development, and many features are still being implemented. The goal is to build a reliable, extensible framework that is easy to maintain and expand as new game features and automation modules are added.
+
+
+## Help Wanted – Contributors Needed
 
 This project is still under active development and there is a lot of work left to do.
 
@@ -30,8 +37,6 @@ Every pull request, bug fix, feature, documentation improvement, and suggestion 
 Thank you for helping make this project better!
 
 
-## About the Project
+## License
 
-This project is a modular, high-performance Lords Mobile bot written in C. It is designed with a focus on clean architecture, efficient packet processing, and configurable automation.
-
-The project is currently under active development, and many features are still being implemented. The goal is to build a reliable, extensible framework that is easy to maintain and expand as new game features and automation modules are added.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
