@@ -3094,7 +3094,7 @@ void RecvRallyCountData(Connection *c, const uint8_t *data)
 	// printf("RequestWarHallListDetail\n");
 	
 	// Fetch All rallies 
-	RequestRallyList(c);
+	// RequestRallyList(c);
 	return;
 }
 
@@ -3318,6 +3318,26 @@ void RecvNPCWallHallDetail(Connection *c, const uint8_t *data) {
 	
 }
 
+void RecvWallHallDel(Connection *c, const uint8_t *data) {
+	uint16_t offset = 0;
+	
+	uint8_t  type  = read_u8(data + offset);  offset += 1;
+	uint32_t index = read_u32(data + offset); offset += 4;
+	
+	if (type > 1) {
+		return;
+	}
+	
+	if (index >= 30) {
+		return;
+	}
+	
+	if (type == 0) {
+		memset(&c->ally_rallies[index], 0, sizeof(Rally));
+	} else {
+		memset(&c->enemy_rallies[index], 0, sizeof(Rally));
+	}
+}
 
 void RecvWallHallDetail(Connection *c, const uint8_t *data) {
 	uint16_t offset = 0;

@@ -116,7 +116,7 @@ void RecvWarBegin(Connection *c, const uint8_t *data);
 void RecvNPCWallHallData(Connection *c, const uint8_t *data);
 void RecvWallHallTroop(Connection*, const uint8_t*);
 void RecvNPCWallHallDetail(Connection*, const uint8_t*);
-
+void RecvWallHallDel(Connection *c, const uint8_t *data);
 void RecvWallHallData(Connection *c, const uint8_t *data);
 void RecvWallHallDetail(Connection *c, const uint8_t *data);
 void RecvTechnologyInfo(Connection*, const uint8_t*, uint16_t);

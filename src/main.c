@@ -175,6 +175,7 @@ void ProcessConnection(Connection *c)
 				case _MSG_RESP_SOCIAL_DATA: 
 					RequestAllianceGiftInfo(c);
 					
+					RequestRallyList(c);
 					// RequestDeleteAllianceGiftBox(c, 0xFFFFFFFF);
 					break;
 				case _MSG_RESP_ITEMINFO: 
@@ -305,6 +306,9 @@ void ProcessConnection(Connection *c)
 					RecvWallHallDetail(c, s->buffer + s->parse_pos + 4);
 					// dump_data("_MSG_RESP_WARHALL_INIT_LISTDETAIL", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					break;
+				case _MSG_RESP_WARHALL_DELETE_LISTELE:
+					RecvWallHallDel(c, s->buffer + s->parse_pos + 4);
+					break;
 				case _MSG_RESP_RESEARCHINFO:
 					RecvTechnologyInfo(c, s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					// dump_data("_MSG_RESP_RESEARCHINFO", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
@@ -323,15 +327,16 @@ void ProcessConnection(Connection *c)
 				default:
 					
 					/*
+					// Debugging purpose only 
 					LOGI("PACKET TYPE: %s (0x%X), size=%u",
 						get_packet_name(s->packet_type),
 						s->packet_type,
 						s->packet_size
 					);
-					
-					
-					dump_data(get_packet_name(s->packet_type), "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					*/
+					
+					//dump_data(get_packet_name(s->packet_type), "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
+					
 					
 					break;
 			}
