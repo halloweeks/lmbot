@@ -1,10 +1,10 @@
-Help Wanted – Contributors Needed
+# Help Wanted – Contributors Needed
 
 This project is still under active development and there is a lot of work left to do.
 
 Completing and maintaining a project like this requires a significant amount of time. My biggest limitation is not knowledge or understanding, but free time. I simply cannot implement every feature, fix every issue, and keep up with game updates by myself.
 
-How you can help
+## How you can help
 
 Contributions of any size are welcome, including:
 
@@ -15,16 +15,23 @@ Contributions of any size are welcome, including:
 - Writing documentation
 - Testing and reporting issues
 
-Need guidance?
+## Need guidance?
 
 If you'd like to contribute but don't know where to start, just ask me.
 
 I'm happy to explain the project architecture, packet structures, protocol, or guide you through implementing a feature. I'll do my best to help contributors understand the codebase.
 
-Why your contribution matters
+## Why your contribution matters
 
 Without community contributions, this project will take much longer to complete. With multiple contributors working together, development can move much faster and the project can become more stable and feature-complete.
 
 Every pull request, bug fix, feature, documentation improvement, and suggestion is appreciated.
 
 Thank you for helping make this project better!
+
+
+## About the Project
+
+This project is a modular, high-performance Lords Mobile bot written in C. It is designed with a focus on clean architecture, efficient packet processing, and configurable automation.
+
+The project is currently under active development, and many features are still being implemented. The goal is to build a reliable, extensible framework that is easy to maintain and expand as new game features and automation modules are added.
