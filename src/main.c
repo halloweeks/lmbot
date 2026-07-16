@@ -147,7 +147,7 @@ void ProcessConnection(Connection *c)
 					return;
 				case _MSG_GAMESERVER_LOGINLOG: 
 					// kind = read_u16(s->buffer + s->parse_pos + 4);
-					// LOGI("Game Server login success");
+					LOGI("Game Server login success");
 					// ServerInitOver(c);
 					break;
 				case _MSG_LOGIN_LOGINERRORRESP: 
@@ -176,6 +176,17 @@ void ProcessConnection(Connection *c)
 					RequestAllianceGiftInfo(c);
 					
 					RequestRallyList(c);
+					
+					/*
+					RequestViewChat(
+						c, // Connection *c
+						0, // Channel 0 for world, 1 for guild 
+						1, // Previous message 
+						3, // kind
+						0, // Data id
+						c->server_time + 5
+					);
+					*/
 					// RequestDeleteAllianceGiftBox(c, 0xFFFFFFFF);
 					break;
 				case _MSG_RESP_ITEMINFO: 
@@ -265,15 +276,9 @@ void ProcessConnection(Connection *c)
 					break;
 				case 0x0B2B: 
 					RecvRoleUpdateInfo(c, s->buffer + s->parse_pos + 4);
-					// dump_data("RecvRoleUpdateInfo", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
-					
-					
-					// printf("ClientAllianceData\n");
 					break;
 				case _MSG_RESP_BROCAST_NPC_WAR_BEGIN: 
 					RecvDarknestBroadcast(c, s->buffer + s->parse_pos + 4);
-					// printf("Darknest: %u\n",s->packet_size + 4);
-					// dump_data("RecvDarknestBroadcast", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					break;
 				case _MSG_RESP_ARMYGROUPINFO_: 
 					RecvArmyGroupInfo(c, s->buffer + s->parse_pos + 4);
@@ -304,10 +309,12 @@ void ProcessConnection(Connection *c)
 					break;
 				case _MSG_RESP_WARHALL_INIT_LISTDETAIL:
 					RecvWallHallDetail(c, s->buffer + s->parse_pos + 4);
-					// dump_data("_MSG_RESP_WARHALL_INIT_LISTDETAIL", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					break;
 				case _MSG_RESP_WARHALL_DELETE_LISTELE:
 					RecvWallHallDel(c, s->buffer + s->parse_pos + 4);
+					break;
+				case _MSG_RESP_WARHALL_END_LISTDETAIL: 
+					RecvWallHallDetailClose(c, s->buffer + s->parse_pos + 4);
 					break;
 				case _MSG_RESP_RESEARCHINFO:
 					RecvTechnologyInfo(c, s->buffer + s->parse_pos + 4, s->packet_size + 4);
@@ -335,8 +342,11 @@ void ProcessConnection(Connection *c)
 					);
 					*/
 					
-					//dump_data(get_packet_name(s->packet_type), "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					
+					
+					/*
+					dump_data(get_packet_name(s->packet_type), "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
+					*/
 					
 					break;
 			}

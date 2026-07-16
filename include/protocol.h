@@ -12,7 +12,9 @@ void RequestHeartBeat(Connection *conn);
 void RequestTroopTraining(Connection *c, uint8_t kind, uint8_t tier, uint32_t amount);
 
 void RequestTroopRecall(Connection *c, uint8_t Index);
+void RequestViewChat(Connection *c, uint8_t channel, uint8_t prev, int8_t kind, int64_t DataID, int64_t DataTime);
 
+void RequestSendChat(Connection *c, uint8_t channel, const char *message);
 
 void RequestRallyList(Connection *c);
 void RequestRallyDetail(Connection *c, uint8_t arg1, uint32_t arg2);
@@ -128,5 +130,6 @@ void RecvMapInfoPlus(Connection *c, const uint8_t *data, uint16_t size);
 void RecvMagicGateDoEvent(Connection *c, const uint8_t *data);
 
 void RequestUnknown(Connection *c);
+void RecvWallHallDetailClose(Connection *c, const uint8_t *data);
 
 #endif
