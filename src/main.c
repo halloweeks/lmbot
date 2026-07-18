@@ -12,6 +12,8 @@
 #include "net_rw.h"
 #include "packet_enum.h"
 
+#include "command.h"
+
 // included mapping for debugging purpose 
 #include "packet_map.h"
 
@@ -71,6 +73,8 @@ void BotTick(Connection *c)
 	
 	// 
 	// DarknestRallyTick(c);
+	
+	ResourceTransferTick(c);
 	
 }
 
@@ -166,7 +170,7 @@ void ProcessConnection(Connection *c)
 				case _MSG_RESP_CHATMESSAGE: 
 					RecvChatMessage(c, s->buffer + s->parse_pos + 4);
 					
-					// command_handler(c, c->chat.player_name, c->chat.message);
+					command_handler(c, c->chat.player_name, c->chat.message);
 					
 					if (c->chat.message[0] != c->bot.command_prefix) {
 						printf("[MSG] [%s]: %s\n", c->chat.player_name, c->chat.message);
@@ -187,6 +191,7 @@ void ProcessConnection(Connection *c)
 						c->server_time + 5
 					);
 					*/
+					
 					// RequestDeleteAllianceGiftBox(c, 0xFFFFFFFF);
 					break;
 				case _MSG_RESP_ITEMINFO: 
@@ -230,6 +235,12 @@ void ProcessConnection(Connection *c)
 					break;
 				case _MSG_RESP_MAILINFO: 
 					RecvMailInfo(c, s->buffer + s->parse_pos + 4);
+					
+					command_handler(c, c->mail.sender_name, c->mail.content);
+					
+					if (c->chat.message[0] != c->bot.command_prefix) {
+						printf("[MAIL] [%s]: %s\n", c->mail.sender_name, c->mail.content);
+					}
 					break;
 				case _MSG_RESP_ALLYPOINT: 
 					RecvAllyPoint(c, s->buffer + s->parse_pos + 4);
@@ -272,6 +283,7 @@ void ProcessConnection(Connection *c)
 					break;
 				case _MSG_RESP_UPDATEWATCHTOWER_ADDLINE:
 					RecvUpdateWatchTowerAddLineInfo(c, s->buffer + s->parse_pos + 4);
+					printf("RecvUpdateWatchTowerAddLineInfo()\n");
 					// dump_data("_MSG_RESP_UPDATEWATCHTOWER_ADDLINE", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					break;
 				case 0x0B2B: 
@@ -291,6 +303,7 @@ void ProcessConnection(Connection *c)
 					break;
 				case _MSG_RESP_NPC_WARHALL_UPDATE_LISTELE: 
 					RecvNPCWallHallData(c, s->buffer + s->parse_pos + 4);
+					// dump_data("_MSG_RESP_NPC_WARHALL_UPDATE_LISTELE", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					break;
 				case _MSG_RESP_NPC_WARHALL_INIT_LISTDETAIL: 
 					RecvNPCWallHallDetail(c, s->buffer + s->parse_pos + 4);
@@ -316,6 +329,10 @@ void ProcessConnection(Connection *c)
 				case _MSG_RESP_WARHALL_END_LISTDETAIL: 
 					RecvWallHallDetailClose(c, s->buffer + s->parse_pos + 4);
 					break;
+				case _MSG_RESP_JOINED_RALLYDATA: 
+					RecvJoinedRallyData(c, s->buffer + s->parse_pos + 4);
+					// dump_data("_MSG_RESP_JOINED_RALLYDATA", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
+					break;
 				case _MSG_RESP_RESEARCHINFO:
 					RecvTechnologyInfo(c, s->buffer + s->parse_pos + 4, s->packet_size + 4);
 					// dump_data("_MSG_RESP_RESEARCHINFO", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
@@ -325,11 +342,15 @@ void ProcessConnection(Connection *c)
 					break;
 				case _MSG_HOSPITAL_HOSPITALINFO: 
 					RecvWoundedTroopData(c, s->buffer + s->parse_pos + 4);
-					// dump_data("_MSG_HOSPITAL_HOSPITALINFO", "", s->buffer + s->parse_pos + 4, s->packet_size + 4);
-					// RecvHospitalInfo
 					break;
 				case _MSG_RESP_UPDATE_MAPINFO_PLUS: 
 					RecvMapInfoPlus(c, s->buffer + s->parse_pos + 4, s->packet_size - 4);
+					break;
+				case _MSG_RESP_SEND_RESHELP: 
+					RecvSHelp(c, s->buffer + s->parse_pos + 4);
+					break;
+				case _MSG_RESP_RESHELP_HOME: 
+					RecvHelp_Home(c, s->buffer + s->parse_pos + 4);
 					break;
 				default:
 					
@@ -341,7 +362,6 @@ void ProcessConnection(Connection *c)
 						s->packet_size
 					);
 					*/
-					
 					
 					
 					/*
@@ -380,6 +400,10 @@ void Configuration(Connection *client)
 	client->app.version_minor = 197;
 	client->app.version_patch = 307;
 	client->app.language_code = 1;   // g_config.language_code;
+	
+	
+	
+	
 	
 	
 	// Automatically purchase desired Black Market (Cargo ship) items.
@@ -489,7 +513,29 @@ void Configuration(Connection *client)
 	client->darknest.tier_order[4] = TIER_T1;
 	
 	
-	return;
+	// currently no banking system implemented 
+	client->bank.enabled   = true;
+	client->bank.send_food = true;
+	client->bank.send_rock = true;
+	client->bank.send_wood = true;
+	client->bank.send_ore  = true;
+	client->bank.send_gold = true;
+	
+	client->bank.reserve.food = 0;
+	client->bank.reserve.rock = 0;
+	client->bank.reserve.wood = 0;
+	client->bank.reserve.ore  = 0;
+	client->bank.reserve.gold = 0;
+	
+	client->bank.max_delivery_distance = 100;
+	
+	client->bank.use_bag_rss  = false;
+	client->bank.use_bag_food = false;
+	client->bank.use_bag_rock = false;
+	client->bank.use_bag_wood = false;
+	client->bank.use_bag_ore  = false;
+	client->bank.use_bag_gold = false;
+	
 }
 
 int main(int argc, const char *argv[]) {

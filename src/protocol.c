@@ -474,6 +474,65 @@ void RequestViewChat(Connection *c, uint8_t channel, uint8_t prev, int8_t kind, 
 	send_packet(c, true);
 }
 
+void RequestSendMail(Connection *c, const char *player_name, const char *subject, const char *message) {
+	uint8_t subject_len = (uint8_t)strlen(subject);
+	uint16_t message_len = (uint16_t)strlen(message);
+	
+	c->size = 2;
+	
+	// packet type 
+	write_u16(c->data + c->size, _MSG_REQUEST_SENDREGMAIL);
+	c->size += 2;
+	
+	// sequence id
+	write_u32(c->data + c->size, ++c->protocol.seq_id);
+	c->size += 4;
+	
+	
+	write_u32(c->data + c->size, 0);
+	c->size += 4;
+	
+	// player name
+	write_raw(c->data + c->size, player_name, 13);
+	c->size += 13;
+	
+	write_u8 (c->data + c->size, 1);
+	c->size += 1;
+	
+	write_u8 (c->data + c->size, subject_len);
+	c->size += 1;
+	
+	write_u16(c->data + c->size, message_len);
+	c->size += 2;
+	
+	write_u8 (c->data + c->size, 0);
+	c->size += 1;
+	
+	
+	write_raw(c->data + c->size, subject, subject_len);
+	c->size += subject_len;
+	
+	write_raw(c->data + c->size, message, message_len);
+	c->size += message_len;
+	
+	
+	write_zero(c->data + c->size, 10);
+	c->size += 10;
+	
+	write_u16(c->data, c->size); // update packet size
+	send_packet(c, true);
+}
+
+void RequestSendMailFmt(Connection *c, const char *player_name, const char *subject, const char *fmt, ...) {
+    char buf[4096];  // adjust size as needed
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    
+    RequestSendMail(c, player_name, subject, buf);
+}
+
 
 void RequestHelpAllianceMember(Connection *c, uint16_t record_sn_count, const uint32_t *record_sn)
 {
@@ -1142,6 +1201,8 @@ void RecvItemInfo(Connection *c, const uint8_t *data, uint16_t size) {
 		
 		c->items[item_id].quantity = item_quantity;
 	}
+	
+	c->items_loaded = true;
 }
 
 const char *FormatTime(uint32_t totalSecs) {
@@ -1222,11 +1283,13 @@ void RecvMarchData(Connection *c, const uint8_t *data) {
 	c->player.current_marches = read_u8(data + offset); offset += 1;
 	
 	// There is more data include troops and location 
-	/*
+	
 	printf("RecvMarchData\n");
 	printf("max_marches: %u\n", c->player.max_marches);
 	printf("current_matches: %u\n", c->player.current_marches);
-	*/
+	
+	// c->transfer.max_marches = c->player.max_marches;
+	
 	return;
 }
 
@@ -2172,6 +2235,7 @@ void RecvAllyPoint(Connection *c, const uint8_t *data)
 	uint8_t  status   = read_u8(data + offset);  offset += 1;
 	uint16_t zone_id  = read_u16(data + offset); offset += 2;
 	uint8_t  point_id = read_u8(data + offset);  offset += 1;
+	
 	map_pos_t pos;
 	
 	switch (status) {
@@ -2186,23 +2250,28 @@ void RecvAllyPoint(Connection *c, const uint8_t *data)
 				pos.y
 			);
 			
-			c->hyper.zone_id = zone_id;
-			c->hyper.point_id = point_id;
+			if (c->transfer.state == TRANSFER_WAIT_TARGET) {
+				c->transfer.zone_id  = zone_id;
+				c->transfer.point_id = point_id;
+				c->transfer.state = TRANSFER_SEND_MARCH;
+			}
 			
-			c->hyper.pending = false;
-			c->hyper.state = HYPER_STATE_READY;
-            break;
-            
-        case 1:
-            printf("Target is in another kingdom\n");
-            c->hyper.state = HYPER_STATE_IDLE;
-            break;
-
-        default:
-            printf("AllyPoint failed: %u\n", status);
-            c->hyper.state = HYPER_STATE_IDLE;
-            break;
-    }
+			break;
+		case 1:
+			printf("Target is in another kingdom\n");
+			
+			if (c->transfer.state == TRANSFER_WAIT_TARGET) {
+				c->transfer.state = TRANSFER_FAILED;
+			}
+			
+			break;
+		default:
+			printf("AllyPoint failed: %u\n", status);
+			if (c->transfer.state == TRANSFER_WAIT_TARGET) {
+				c->transfer.state = TRANSFER_FAILED;
+			}
+			break;
+	}
 }
 
 void RecvAllianceHelp(Connection *c, const uint8_t *data) {
@@ -2962,7 +3031,32 @@ void RecvArmyGroupInfo(Connection *c, const uint8_t *data) {
 	return;
 }
 
+static const uint32_t troop_might[4] = {
+    2,   // T1
+    8,   // T2
+    24,  // T3
+    36   // T4
+};
+
+uint64_t CalculateTroopMight(const TroopData *t)
+{
+    uint64_t might = 0;
+
+    for (int i = 0; i < 4; i++) {
+        might += (uint64_t)t->infantry[i] * troop_might[i];
+        might += (uint64_t)t->ranged[i]   * troop_might[i];
+        might += (uint64_t)t->cavalry[i]  * troop_might[i];
+        might += (uint64_t)t->siege[i]    * troop_might[i];
+    }
+
+    return might;
+}
+
 void WoundedTroopDataLog(Connection *c) {
+	// T1 might: 2
+	// T2 might: 8
+	// T3 might: 24
+	// T4 might: 36
 	
 	printf("Total Wounded: %u\n", c->wounded.troop.total);
 	
@@ -3003,6 +3097,13 @@ void WoundedTroopDataLog(Connection *c) {
 	
 	printf("num: %lu\n", c->wounded.num);
 	printf("total time: %u\n", c->wounded.total_time);
+	
+	
+	printf("Wounded Might: %llu\n",
+       (unsigned long long)CalculateTroopMight(&c->wounded.troop));
+       
+   //printf("Healing Might: %llu\n",
+     //  (unsigned long long)CalculateTroopMight(&c->wounded.healing));
 }
 
 void RecvWoundedTroopData(Connection *c, const uint8_t *data) {
@@ -3077,26 +3178,10 @@ void RecvDarknestBroadcast(Connection *c, const uint8_t *data) {
 	uint8_t level      = read_u8 (data + offset); offset += 1;
 	read_raw(player_name, data + offset, 13); offset += 13;
 	
-	
-	strcpy(c->rally.leader, player_name);
-	c->rally.pending = true;
-	c->rally.level = level;
-	
-	// Join after 5 seconds.
-	// c->rally.execute_time = c->server_time + 5;
-	
-	/*
-	uint32_t troop_array[16] = {0};
-	
-	// Send all available T1 cavalry.
-	troop_array[8] = 10;// c->troop.cavalry[0];
-	
-	RequestJoinRally(c, player_name, troop_array);
-	*/
 	printf("[INFO] Lv.%u Darknest rally opened by %s\n", level, player_name);
 	printf("data_index: %ld\n", data_index);
 	
-	
+	// RequestRallyList(c);
 }
 
 
@@ -3227,12 +3312,13 @@ const char *GetNPCName(uint16_t npc_id)
 void NPCRallyLog(const NPCRally *r)
 {
 	printf(
-		"[NPC RALLY] %s -> %s Lv.%u (%u/%u)\n",
+		"[NPC RALLY] %s -> %s Lv.%u (%u/%u) index: %u\n",
 		r->ally_name,
 		GetNPCName(r->enemy_npc_id),
 		r->enemy_vip,
 		r->ally_curr_troop,
-		r->ally_max_troop
+		r->ally_max_troop,
+		r->index
 	);
 }
 
@@ -3262,7 +3348,12 @@ void RecvNPCWallHallData(Connection *c, const uint8_t *data) {
 	c->npc_rallies[index].enemy_vip         = read_u8 (data + offset); offset += 1;
 	c->npc_rallies[index].enemy_npc_id      = read_u16(data + offset); offset += 2;
 	
+	// RequestRallyDetail(c, 0, index);
+	
 	NPCRallyLog(&c->npc_rallies[index]);
+	
+	
+	
 	
 	// if darknest auto join not enabled then leave 
 	if (!c->darknest.auto_join) {
@@ -3280,7 +3371,7 @@ void RecvNPCWallHallData(Connection *c, const uint8_t *data) {
 	}
 	
 	if (c->darknest.formation_mode == DARKNEST_FORMATION_LEADER) {
-		RequestRallyDetail(c, 0, index);
+		// RequestRallyDetail(c, 0, index);
 		return;
 	}
 	
@@ -3288,6 +3379,8 @@ void RecvNPCWallHallData(Connection *c, const uint8_t *data) {
 	
 	// RequestRallyDetail(c, 0, index);
 	return;
+	
+	
 	
 	map_pos_t pos = getTileMapPosbyPointCode(c->npc_rallies[index].ally_zone_id, c->npc_rallies[index].ally_point_id);
 	
@@ -3355,6 +3448,28 @@ static const char *TroopNameByIndex(int index)
     return names[index];
 }
 
+// 0x1C94
+
+/*
+let kind = packet.read_u8()?;
+let begin_time = packet.read_i64()?;
+let require_time = packet.read_u32()?;
+let ally_zone_id = packet.read_u16()?;
+let ally_point_id = packet.read_u8()?;
+let ally_head = packet.read_u16()?;
+let ally_name = packet.read_string(13)?;
+let ally_vip = packet.read_u8()?;
+let ally_rank = packet.read_u8()?;
+let ally_max_troop = packet.read_u32()?;
+let enemy_head = u8::MAX as u16;
+let enemy_zone_id = packet.read_u16()?;
+let enemy_point_id = packet.read_u8()?;
+let enemy_vip = packet.read_u8()?;
+let enemy_npc_id = packet.read_u16()?;
+let rec_num = packet.read_u8()?;
+let self_participate = packet.read_u8()?;
+let ally_home_kingdom = packet.read_u16()?;
+                */
 void RecvNPCWallHallDetail(Connection *c, const uint8_t *data) {
 	uint16_t offset = 0;
 	
@@ -3372,18 +3487,22 @@ void RecvNPCWallHallDetail(Connection *c, const uint8_t *data) {
 	uint8_t ally_vip      = read_u8 (data + offset); offset += 1;
 	uint8_t ally_rank     = read_u8 (data + offset); offset += 1;
 	
-	
-	uint32_t ally_curr_troop = read_u32(data + offset); offset += 4;
 	uint32_t ally_max_troop = read_u32(data + offset); offset += 4;
-	
-	uint16_t ally_home_kingdom = read_u16(data + offset); offset += 2;
-	
 	
 	uint16_t enemy_head     = 255;
 	uint16_t enemy_zone_id  = read_u16(data + offset); offset += 2;
 	uint8_t  enemy_point_id = read_u8 (data + offset); offset += 1;
 	uint8_t  enemy_vip      = read_u8 (data + offset); offset += 1;
 	uint16_t enemy_npc_id   = read_u16(data + offset); offset += 2;
+	
+	
+	uint8_t rec_num = read_u8 (data + offset); offset += 1;
+	uint8_t self_participate = read_u8 (data + offset); offset += 1;
+	uint16_t ally_home_kingdom = read_u16(data + offset); offset += 2;
+	
+	
+	
+	
 	
 	map_pos_t pos = getTileMapPosbyPointCode(ally_zone_id, ally_point_id);
 	
@@ -3402,7 +3521,6 @@ void RecvNPCWallHallDetail(Connection *c, const uint8_t *data) {
 	printf("ally_vip: %u\n", ally_vip);
 	printf("ally_rank: %u\n", ally_rank);
 
-	printf("ally_curr_troop: %u\n", ally_curr_troop);
 	printf("ally_max_troop: %u\n", ally_max_troop);
 	printf("ally_home_kingdom: %u\n", ally_home_kingdom);
 
@@ -3410,7 +3528,13 @@ void RecvNPCWallHallDetail(Connection *c, const uint8_t *data) {
 	printf("enemy_point_id: %u\n", enemy_point_id);
 	printf("enemy_vip: %u\n", enemy_vip);
 	printf("enemy_npc_id: %u\n", enemy_npc_id);
-
+	
+	printf("rec_num: %u\n", rec_num);
+	printf("self_participate: %u\n", self_participate);
+	printf("ally_home_kingdom: %u\n", ally_home_kingdom);
+	
+	
+	
 	printf("%s K:%u X:%u Y:%u\n", ally_name, ally_home_kingdom, pos.x, pos.y);
 	
 	printf("=== End NPC Wall Hall Detail ===\n");
@@ -3546,11 +3670,12 @@ public void Init(MessagePacket MP)
 void WarRallyLog(Rally *r) {
 	if (r->type == 0) {
 		printf(
-			"[ALLY RALLY] %s -> %s (%u/%u)\n",
+			"[ALLY RALLY] %s -> %s (%u/%u) index: %u\n",
 			r->ally_name,
 			r->enemy_name,
 			r->ally_curr_troop,
-			r->ally_max_troop
+			r->ally_max_troop,
+			r->index
 		);
 	} else {
 		printf(
@@ -3613,10 +3738,11 @@ void RecvWallHallData(Connection *c, const uint8_t *data) {
 	
 	rally->enemy_home_kingdom = read_u16(data + offset); offset += 2;
 	
+	/*
 	WarRallyLog(rally);
 	
 	return;
-	
+	*/
 	
 	map_pos_t pos = getTileMapPosbyPointCode(rally->ally_zone_id, rally->ally_point_id);
 	
@@ -3662,6 +3788,59 @@ void RecvWallHallData(Connection *c, const uint8_t *data) {
 	
 	printf("\n\n\n");
 	
+	RequestRallyDetail(c, 0, index);
+	
+}
+
+
+void RecvJoinedRallyData(Connection *c, const uint8_t *data) {
+	uint16_t offset = 0;
+	
+	uint8_t b = read_u8(data + offset); offset += 1;
+	
+	printf("RecvJoinedRallyData()\n");
+	printf("b: %u\n", b);
+	
+	for (int i = 0; i < (int)b; i++)
+	{
+		// March Index
+		uint8_t b2 = read_u8(data + offset); offset += 1;
+		
+		printf("b2: %u\n", b2);
+		
+		if (b2 >= 8)
+		{
+			return;
+		}
+		
+		
+		uint8_t state = read_u8(data + offset); offset += 1;
+		uint64_t BeginTime   = read_u64(data + offset); offset += 8;
+		uint32_t RequireTime = read_u32(data + offset); offset += 4;
+		uint16_t zoneID = read_u16(data + offset); offset += 2;
+		uint8_t pointID = read_u8(data + offset); offset += 1;
+		
+		printf("state: %u\n", state);
+		printf("BeginTime: %lu\n", BeginTime);
+		printf("RequireTime: %u\n", RequireTime);
+		printf("zoneID: %u\n", zoneID);
+		printf("pointID: %u\n", pointID);
+		
+		
+		
+		/*
+		this.JoinedRallyDataType[(int)b2].MarchIndex = b2;
+		byte state = MP.ReadByte(-1);
+		this.JoinedRallyDataType[(int)b2].State = state;
+		this.JoinedRallyDataType[(int)b2].MarchEventTime.BeginTime = MP.ReadLong(-1);
+		this.JoinedRallyDataType[(int)b2].MarchEventTime.RequireTime = MP.ReadUInt(-1);
+		this.JoinedRallyDataType[(int)b2].RallyPoint.zoneID = MP.ReadUShort(-1);
+		this.JoinedRallyDataType[(int)b2].RallyPoint.pointID = MP.ReadByte(-1);
+		this.SetQueueBarData(EQueueBarIndex.JoinedRallyBegin + (int)this.JoinedRallyDataType[(int)b2].MarchIndex, true, this.JoinedRallyDataType[(int)b2].MarchEventTime.BeginTime, this.JoinedRallyDataType[(int)b2].MarchEventTime.RequireTime);
+		DataManager.Instance.SetRecvQueueBarData((int)(22 + this.JoinedRallyDataType[(int)b2].MarchIndex));
+		*/
+	}
+	// this.CheckTroolCount();
 }
 
 /*
@@ -3913,4 +4092,219 @@ void point_kind_str(int pk, char *buf) {
 void RecvMapInfoPlus(Connection *c, const uint8_t *data, uint16_t size) {
 	uint16_t offset = 0;
 	
+}
+
+
+uint32_t CalculateTransferAmount(Connection *c)
+{
+	uint32_t current = 0;
+	uint32_t reserve = 0;
+	
+	switch (c->transfer.resource_type) {
+		case RESOURCE_FOOD:
+			current = c->resources.food;
+			reserve = c->bank.reserve.food;
+			break;
+		case RESOURCE_ROCK:
+			current = c->resources.rock;
+			reserve = c->bank.reserve.rock;
+			break;
+		case RESOURCE_WOOD:
+			current = c->resources.wood;
+			reserve = c->bank.reserve.wood;
+			break;
+		case RESOURCE_ORE:
+			current = c->resources.ore;
+			reserve = c->bank.reserve.ore;
+			break;
+		case RESOURCE_GOLD:
+			current = c->resources.gold;
+			reserve = c->bank.reserve.gold;
+			break;
+		default:
+			return 0;
+	}
+	
+	/* Keep reserved resources. */
+	if (current <= reserve)
+		return 0;
+	
+	uint32_t available = current - reserve;
+	
+	/* Don't send more than requested. */
+	if (available > c->transfer.remaining)
+		available = c->transfer.remaining;
+	
+	/* Don't exceed Trading Post capacity. */
+	if (available > c->supply_capacity)
+		available = c->supply_capacity;
+	
+	return available;
+}
+
+// currently food sending available for testing purpose 
+void SendResourceMarch(Connection *c) {
+	if (c->player.current_marches >= c->player.max_marches) return;
+	
+	if (c->transfer.remaining == 0) {
+		c->transfer.state = TRANSFER_COMPLETE;
+		return;
+	}
+	
+	uint32_t amount = CalculateTransferAmount(c);
+	
+	if (amount == 0) {
+		c->transfer.state = TRANSFER_COMPLETE;
+		return;
+	}
+	
+	Resources resource = {0};
+	
+	switch (c->transfer.resource_type) {
+		case RESOURCE_FOOD: 
+			resource.food = amount;
+			break;
+		case RESOURCE_ROCK: 
+			resource.rock = amount;
+			break;
+		case RESOURCE_WOOD: 
+			resource.wood = amount;
+			break;
+		case RESOURCE_ORE: 
+			resource.ore = amount;
+			break;
+		case RESOURCE_GOLD: 
+			resource.gold = amount;
+			break;
+	} 
+	
+	SendResource(c, resource, c->transfer.zone_id, c->transfer.point_id);
+	
+	c->transfer.remaining -= amount;
+	c->transfer.state = TRANSFER_WAIT_MARCH;
+	
+	return;
+}
+
+void ResourceTransferTick(Connection *c)
+{
+	if (c->transfer.state == TRANSFER_IDLE) return;
+	
+	// Bot doesn't have trading post yet
+	if (c->supply_capacity == 0) return;
+	
+	switch (c->transfer.state) {
+		case TRANSFER_FIND_TARGET:
+			/* Find player's location */
+			RequestAllyPoint(c, c->transfer.target_name);
+			c->transfer.timeout = time(NULL) + 10;   // wait up to 10 seconds
+			c->transfer.state = TRANSFER_WAIT_TARGET;
+			// printf("TRANSFER_FIND_TARGET\n");
+			break;
+		case TRANSFER_WAIT_TARGET: 
+			if (time(NULL) >= c->transfer.timeout) {
+				// printf("[TRANSFER] Target lookup timed out.\n");
+				c->transfer.state = TRANSFER_FAILED;
+			}
+			break;
+		case TRANSFER_SEND_MARCH:
+			SendResourceMarch(c);
+			// printf("TRANSFER_SEND_MARCH\n");
+			break;
+		case TRANSFER_WAIT_MARCH:
+			/* Wait until march returns */
+			
+			break;
+		case TRANSFER_COMPLETE:
+			c->transfer.state = TRANSFER_IDLE;
+			break;
+		case TRANSFER_FAILED:
+			c->transfer.state = TRANSFER_IDLE;
+			break;
+		default:
+			break;
+	}
+}
+
+void RecvSHelp(Connection *c, const uint8_t *data) {
+	uint16_t offset = 0;
+	
+	uint8_t b = read_u8(data + offset); offset += 1;
+	
+	// b == 1 means max march reached 
+	if (b != 0) {
+		c->transfer.state = TRANSFER_FAILED;
+		return;
+	}
+	
+	// marches counts
+	uint8_t b2 = read_u8(data + offset); offset += 1;
+	
+	if (b2 >= 8)
+	{
+		c->transfer.state = TRANSFER_FAILED;
+		return;
+	}
+	
+	uint16_t zoneID      = read_u16(data + offset); offset += 2;
+	uint8_t pointID      = read_u8(data + offset);  offset += 1;
+	uint64_t BeginTime   = read_u64(data + offset); offset += 8;
+	uint32_t RequireTime = read_u32(data + offset); offset += 4;
+	
+	uint32_t food_stock = read_u32(data + offset); offset += 4;
+	uint32_t rock_stock = read_u32(data + offset); offset += 4;
+	uint32_t wood_stock = read_u32(data + offset); offset += 4;
+	uint32_t ore_stock  = read_u32(data + offset); offset += 4;
+	uint32_t gold_stock = read_u32(data + offset); offset += 4;
+	
+	
+	uint32_t food_send = read_u32(data + offset); offset += 4;
+	uint32_t rock_send = read_u32(data + offset); offset += 4;
+	uint32_t wood_send = read_u32(data + offset); offset += 4;
+	uint32_t ore_send  = read_u32(data + offset); offset += 4;
+	uint32_t gold_send = read_u32(data + offset); offset += 4;
+	
+	
+	uint8_t PointKind = (POINT_KIND)read_u8(data + offset);  offset += 1;
+	uint8_t DesPointLevel = read_u8(data + offset);  offset += 1;
+	
+	char DesPlayerName[13];
+	read_raw(DesPlayerName, data + offset, 13); offset += 13;
+	
+	// c->transfer.cur_marches++;
+	c->player.current_marches++;
+	c->transfer.state = TRANSFER_SEND_MARCH;
+}
+
+void RecvHelp_Home(Connection *c, const uint8_t *data) {
+	uint16_t offset = 0;
+	
+	uint8_t b = read_u8(data + offset); offset += 1;	
+	
+	if (b >= 8) {
+		c->transfer.state = TRANSFER_FAILED;
+		return;
+	}
+	
+	if (b < 8) {
+		c->resources.food  = read_u32(data + offset); offset += 4;
+		c->resources.rock  = read_u32(data + offset); offset += 4;
+		c->resources.wood  = read_u32(data + offset); offset += 4;
+		c->resources.ore  = read_u32(data + offset);  offset += 4;
+		c->resources.gold  = read_u32(data + offset); offset += 4;
+		
+		c->resources_last_update = c->server_time;
+		
+		if (c->player.current_marches > 0) {
+			c->player.current_marches--;
+		}
+		
+		if (c->transfer.remaining > 0) {
+			c->transfer.state = TRANSFER_SEND_MARCH;
+		} else {
+			c->transfer.state = TRANSFER_COMPLETE;
+		}
+		
+		return;
+	}		
 }

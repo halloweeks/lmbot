@@ -13,6 +13,7 @@ add_executable(client
     src/protocol.c
     src/des.c
     src/map_point.c
+    src/command.c
 )
 
 target_include_directories(client PRIVATE include)

@@ -132,4 +132,19 @@ void RecvMagicGateDoEvent(Connection *c, const uint8_t *data);
 void RequestUnknown(Connection *c);
 void RecvWallHallDetailClose(Connection *c, const uint8_t *data);
 
+
+void RecvJoinedRallyData(Connection *c, const uint8_t *data);
+
+void ResourceTransferTick(Connection *c);
+
+
+void RequestSendMail(Connection *c, const char *player_name, const char *subject, const char *message);
+void RequestSendMailFmt(Connection *c, const char *player_name, const char *subject, const char *fmt, ...);
+
+void RecvSHelp(Connection *c, const uint8_t *data);
+void RecvHelp_Home(Connection *c, const uint8_t *data);
+
+
+void format_number2(uint64_t num, char *out, size_t size);
+
 #endif

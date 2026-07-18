@@ -149,20 +149,23 @@ typedef struct {
     bool pending;
 } ChatState;
 
+/*
 typedef enum {
     TRANSFER_IDLE,
-    TRANSFER_FINDING_TARGET,
-    TRANSFER_SENDING,
-    TRANSFER_WAITING_MARCH,
+    TRANSFER_FIND_TARGET,
+    TRANSFER_WAIT_TARGET,
+    TRANSFER_SEND_MARCH,
+    TRANSFER_WAIT_MARCH,
     TRANSFER_COMPLETE,
     TRANSFER_FAILED
 } TransferState;
 
+
 typedef struct {
 	bool active;
 	TransferState state;
-	char requester[13];
-	char target[13];
+	char request_name[13];
+	char target_name[13];
 	
 	ResourceType resource;
 	
@@ -174,7 +177,7 @@ typedef struct {
 	
 	uint32_t current_chunk;
 } ResourceTransfer;
-
+*/
 
 typedef struct {
     uint32_t serial_id;
@@ -488,6 +491,8 @@ typedef struct {
 	
 } HyperSettings;
 
+
+
 typedef struct {
 	bool loaded;
 	uint32_t total;
@@ -716,6 +721,38 @@ typedef struct {
 } Rally;
 
 
+typedef enum {
+    TRANSFER_IDLE,
+    TRANSFER_FIND_TARGET,
+    TRANSFER_WAIT_TARGET,
+    TRANSFER_SEND_MARCH,
+    TRANSFER_WAIT_MARCH,
+    TRANSFER_COMPLETE,
+    TRANSFER_FAILED
+} TransferState;
+
+
+typedef struct {
+	char issued_name[13]; // Who initiated resource command?
+    char target_name[13]; // Who will receive resource?
+
+    ResourceType resource_type;
+    ResourceStock resource;
+    
+    time_t timeout;
+    
+    uint8_t max_marches;
+    uint8_t cur_marches;
+    
+    uint32_t amount;
+    uint32_t remaining;
+
+    uint16_t zone_id;
+    uint8_t point_id;
+
+    TransferState state;
+} ResourceTransfer;
+
 typedef struct {
 	// network
 	int sock;
@@ -724,6 +761,7 @@ typedef struct {
 	AuthInfo auth;
 	// game items
 	Item items[MAX_ITEM_COUNT];
+	bool items_loaded;
 	// protocol state
 	ProtocolState protocol;
 	// outgoing packet buffer 
@@ -757,7 +795,7 @@ typedef struct {
 	BlackMarketBuy buy;
 	
 	// resources sending
-	ResourceTransfer transfer;
+	// ResourceTransfer transfer;
 	
 	MailInfo mail;
 	
@@ -811,6 +849,8 @@ typedef struct {
 	Rally enemy_rallies[30];    // Enemy rallies targeting us.
 	
 	RallyMember rally_members[30];
+	
+	ResourceTransfer transfer;
 } Connection;
 
 /* API */
