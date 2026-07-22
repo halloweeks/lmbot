@@ -22,7 +22,6 @@ The project is designed with a strong focus on clean architecture, efficient pac
 
 - CMake
 - C compiler (GCC, Clang, or MSVC)
-- OpenSSL
 
 ## Building
 
