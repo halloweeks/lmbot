@@ -4186,6 +4186,9 @@ void SendResourceMarch(Connection *c) {
 	return;
 }
 
+/*
+Must require to turn event based instead of tick based
+*/
 void ResourceTransferTick(Connection *c)
 {
 	if (c->transfer.state == TRANSFER_IDLE) return;
