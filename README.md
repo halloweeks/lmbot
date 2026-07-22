@@ -1,41 +1,117 @@
-## About the Project
+# Lords Mobile Bot
 
-This project is a modular, high-performance Lords Mobile bot written in C. It is designed with a focus on clean architecture, efficient packet processing, and configurable automation.
+A modular, high-performance Lords Mobile bot written in C.
 
-The project is currently under active development, and many features are still being implemented. The goal is to build a reliable, extensible framework that is easy to maintain and expand as new game features and automation modules are added.
+The project is designed with a strong focus on clean architecture, efficient packet processing, and configurable automation. It aims to provide a stable, maintainable, and extensible codebase that can be easily expanded as new game features and automation modules are developed.
 
+> **Project Status**
+>
+> This project is under active development. Features, APIs, and internal structures may change between versions.
 
-## Help Wanted – Contributors Needed
+## Features
 
-This project is still under active development and there is a lot of work left to do.
+- Modular architecture
+- High-performance binary protocol implementation
+- Efficient packet processing
+- Configurable automation system
+- Event-driven networking
+- Cross-platform build system (CMake)
+- MIT licensed
 
-Completing and maintaining a project like this requires a significant amount of time. My biggest limitation is not knowledge or understanding, but free time. I simply cannot implement every feature, fix every issue, and keep up with game updates by myself.
+## Requirements
 
-## How you can help
+- CMake
+- C compiler (GCC, Clang, or MSVC)
+- OpenSSL
 
-Contributions of any size are welcome, including:
+## Building
 
-- Implementing new features
-- Fixing bugs
-- Improving existing code
-- Refactoring
-- Writing documentation
-- Testing and reporting issues
+Clone the repository:
 
-## Need guidance?
+```bash
+git clone https://github.com/halloweeks/lords-mobile-bot.git
+cd lords-mobile-bot
+```
 
-If you'd like to contribute but don't know where to start, just ask me.
+Build using CMake:
 
-I'm happy to explain the project architecture, packet structures, protocol, or guide you through implementing a feature. I'll do my best to help contributors understand the codebase.
+```bash
+mkdir build
+cd build
 
-## Why your contribution matters
+cmake ..
+cmake --build .
+```
 
-Without community contributions, this project will take much longer to complete. With multiple contributors working together, development can move much faster and the project can become more stable and feature-complete.
+Or simply use the provided build script:
 
-Every pull request, bug fix, feature, documentation improvement, and suggestion is appreciated.
+```bash
+./build.sh
+```
 
-Thank you for helping make this project better!
+## Getting Started
 
+Generate a default configuration file:
+
+```bash
+./client --create-config
+```
+
+This creates a `config.cfg` file in the current directory.
+
+Open `config.cfg` and replace the example values with your own account information:
+
+```ini
+# Replace the example values below with your own account information.
+account.igg_id = 1234567890
+account.device_uuid = 12345678-1234-1234-1234-123456789abc
+account.access_key = YOUR_ACCESS_KEY_HERE
+```
+
+Save the file, then start the bot:
+
+```bash
+./client config.cfg
+```
+
+## Command Line Options
+
+Display help:
+
+```bash
+./client --help
+```
+
+Generate a default configuration file:
+
+```bash
+./client --create-config
+```
+
+Display version information:
+
+```bash
+./client --version
+```
+
+Run the bot:
+
+```bash
+./client config.cfg
+```
+
+## Project Structure
+
+```
+include/        Header files
+src/            Source code
+CMakeLists.txt  CMake build configuration
+build.sh        Build helper script
+```
+
+## Documentation
+
+Additional documentation will be added as the project continues to develop.
 
 ## License
 
