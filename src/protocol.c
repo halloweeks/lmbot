@@ -4094,6 +4094,9 @@ void RecvMapInfoPlus(Connection *c, const uint8_t *data, uint16_t size) {
 	
 }
 
+/*
+Require refinement 
+*/
 
 uint32_t CalculateTransferAmount(Connection *c)
 {
