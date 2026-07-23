@@ -7,6 +7,8 @@
 #include "log.h"
 #include <stdlib.h>
 
+#include <stdarg.h>
+
 #include "MAP_UPDATE_KIND.h"
 
 // Bootstrap login
