@@ -25,3 +25,11 @@ jobs:
 
     - name: Build
       run: cmake --build build
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: client-${{ matrix.os }}
+        path: |
+          build/client
+          build/client.exe
