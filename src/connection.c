@@ -2,10 +2,15 @@
 
 int set_nonblocking(Connection *conn)
 {
+#ifdef _WIN32
+    u_long mode = 1;
+    return ioctlsocket(conn->sock, FIONBIO, &mode);
+#else
     int flags = fcntl(conn->sock, F_GETFL, 0);
     if (flags < 0) return -1;
 
     return fcntl(conn->sock, F_SETFL, flags | O_NONBLOCK);
+#endif
 }
 
 int connect_server(const char *ip, unsigned short port)
@@ -24,13 +29,13 @@ int connect_server(const char *ip, unsigned short port)
 
     if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0) {
         perror("inet_pton");
-        close(sock);
+        close_socket(sock);
         return -1;
     }
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         perror("connect");
-        close(sock);
+        close_socket(sock);
         return -1;
     }
 
@@ -49,7 +54,7 @@ bool send_packet(Connection *conn, bool enc)
 void disconnect(Connection *c)
 {
     if (c->sock >= 0)
-        close(c->sock);
+        close_socket(c->sock);
         c->sock = -1;
 }
 

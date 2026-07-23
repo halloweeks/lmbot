@@ -4,14 +4,28 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <unistd.h>
+#ifdef _WIN32
+  #ifndef _WIN32_WINNT
+  #define _WIN32_WINNT 0x0601
+  #endif
+  #define WIN32_LEAN_AND_MEAN
+  #define NOMINMAX
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+  #include <windows.h>
+  typedef unsigned int uint;
+  #define close_socket closesocket
+#else
+  #include <unistd.h>
+  #include <arpa/inet.h>
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <fcntl.h>
+  #define close_socket close
+#endif
+
 #include <string.h>
 #include <stdio.h>
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <fcntl.h>
 
 #include "des.h"
 

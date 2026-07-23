@@ -8,7 +8,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_executable(client
     src/main.c
     src/connection.c
-    src/account.c
     src/log.c
     src/protocol.c
     src/des.c
@@ -22,3 +21,7 @@ target_compile_definitions(client PRIVATE
 )
 
 target_include_directories(client PRIVATE include)
+
+if(WIN32)
+    target_link_libraries(client PRIVATE ws2_32)
+endif()

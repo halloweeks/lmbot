@@ -21,7 +21,9 @@ The project is designed with a strong focus on clean architecture, efficient pac
 ## Requirements
 
 - CMake
-- C compiler (GCC, Clang, or MSVC)
+- A C compiler:
+  - **Linux / macOS:** GCC or Clang
+  - **Windows:** MinGW-w64 GCC (recommended) or MSVC
 
 ## Building
 
@@ -32,7 +34,10 @@ git clone https://github.com/halloweeks/lords-mobile-bot.git
 cd lords-mobile-bot
 ```
 
-Build using CMake:
+The build system is cross-platform. The resulting executable is named `client` on
+Linux/macOS and `client.exe` on Windows.
+
+### Linux / macOS
 
 ```bash
 mkdir build
@@ -48,7 +53,36 @@ Or simply use the provided build script:
 ./build.sh
 ```
 
+### Windows (MinGW-w64)
+
+Using CMake:
+
+```bat
+mkdir build
+cd build
+
+cmake -G "MinGW Makefiles" ..
+cmake --build .
+```
+
+Or simply use the provided build script:
+
+```bat
+build.bat
+```
+
+Or compile directly with GCC:
+
+```bat
+gcc -O2 -Iinclude src\main.c src\connection.c src\log.c src\protocol.c src\des.c src\map_point.c src\command.c src\config.c -o client.exe -lws2_32
+```
+
+The Windows build links against `ws2_32` (Winsock); CMake and `build.bat` handle
+this automatically.
+
 ## Getting Started
+
+> On Windows, use `client.exe` instead of `./client` in the commands below.
 
 Generate a default configuration file:
 
@@ -105,7 +139,8 @@ Run the bot:
 include/        Header files
 src/            Source code
 CMakeLists.txt  CMake build configuration
-build.sh        Build helper script
+build.sh        Build helper script (Linux / macOS)
+build.bat       Build helper script (Windows / MinGW)
 ```
 
 ## Documentation

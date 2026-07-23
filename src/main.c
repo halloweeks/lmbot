@@ -1,12 +1,13 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
+#ifndef _WIN32
+  #include <unistd.h>
+  #include <fcntl.h>
+#endif
 
 #include "connection.h"
-#include "account.h"
 #include "log.h"
 #include "protocol.h"
 #include "net_rw.h"
@@ -36,25 +37,20 @@
 
 // debugging purpose 
 void dump_data(const char *filename, const char *str, void *data, size_t size) {
+	(void)str;
 	char name[1024] = {0};
-	struct timespec ts;
-	clock_gettime(CLOCK_REALTIME, &ts); // nanosecond precision
-	
-	// Use seconds + nanoseconds in filename (avoid collisions)
-	// snprintf(name, sizeof(name), "/sdcard/lmbot/logs/%ld_%ld_%s_%s", ts.tv_sec, ts.tv_nsec, str, filename);
-	
-	snprintf(name, sizeof(name), "/sdcard/lmbot/logs/%s.bin", filename);
-	
-	
-	int file = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (file < 0) {
+
+	snprintf(name, sizeof(name), "%s.bin", filename);
+
+	FILE *file = fopen(name, "wb");
+	if (file == NULL) {
 		perror("open failed");
 		return;
 	}
-	if (write(file, data, size) != (ssize_t)size) {
+	if (fwrite(data, 1, size, file) != size) {
 		perror("write failed");
 	}
-	close(file);
+	fclose(file);
 
 	printf("file: %s saved\n", name);
 }
@@ -153,10 +149,17 @@ void ProcessConnection(Connection *c)
 		}
 		else {
 			// non-blocking case
+#ifdef _WIN32
+			if (WSAGetLastError() == WSAEWOULDBLOCK) {
+				Sleep(1);
+				continue; // no more data right now
+			}
+#else
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				usleep(1000);
 				continue; // no more data right now
 			}
+#endif
 
 			LOGE("Recv error\n");
 			break;
@@ -799,6 +802,14 @@ int main(int argc, const char *argv[]) {
 		PrintVersion();
 		return 0;
 	}
+
+#ifdef _WIN32
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+		LOGE("WSAStartup failed");
+		return 1;
+	}
+#endif
 	
 	if (argc != 2) {
         printf("Usage: %s <config.cfg>\n", argv[0]);
