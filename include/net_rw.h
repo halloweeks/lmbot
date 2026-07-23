@@ -55,6 +55,16 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+    #define __ORDER_LITTLE_ENDIAN__ 1234
+    #define __ORDER_BIG_ENDIAN__    4321
+    #define __BYTE_ORDER__          __ORDER_LITTLE_ENDIAN__
+    
+    #define __builtin_bswap16 _byteswap_ushort
+    #define __builtin_bswap32 _byteswap_ulong
+    #define __builtin_bswap64 _byteswap_uint64
+#endif
+
 // Check for known endian macros
 #if !defined(__BYTE_ORDER__) || !defined(__ORDER_BIG_ENDIAN__) || !defined(__ORDER_LITTLE_ENDIAN__)
     #error "Cannot determine endianness. __BYTE_ORDER__ or __ORDER_BIG_ENDIAN__/__ORDER_LITTLE_ENDIAN__ not defined."
@@ -81,7 +91,7 @@ static inline void write_u16(uint8_t *p, uint16_t v)
 		v = __builtin_bswap16(v);
 	#endif
 	
-    __builtin_memcpy(p, &v, sizeof(v));
+    memcpy(p, &v, sizeof(v));
 }
 
 static inline void write_u32(uint8_t *p, uint32_t v)
@@ -90,7 +100,7 @@ static inline void write_u32(uint8_t *p, uint32_t v)
 		v = __builtin_bswap32(v);
 	#endif
 	
-	__builtin_memcpy(p, &v, sizeof(v));
+	memcpy(p, &v, sizeof(v));
 }
 
 static inline void write_u64(uint8_t *p, uint64_t v)
@@ -99,7 +109,7 @@ static inline void write_u64(uint8_t *p, uint64_t v)
 		v = __builtin_bswap64(v);
 	#endif
 	
-	__builtin_memcpy(p, &v, sizeof(v));
+	memcpy(p, &v, sizeof(v));
 }
 
 static inline void write_i8(uint8_t *p, int8_t v)
@@ -113,7 +123,7 @@ static inline void write_i16(uint8_t *p, int16_t v)
 		v = __builtin_bswap16(v);
 	#endif
 	
-    __builtin_memcpy(p, &v, sizeof(v));
+    memcpy(p, &v, sizeof(v));
 }
 
 static inline void write_i32(uint8_t *p, int32_t v)
@@ -122,7 +132,7 @@ static inline void write_i32(uint8_t *p, int32_t v)
 		v = __builtin_bswap32(v);
 	#endif
 	
-	__builtin_memcpy(p, &v, sizeof(v));
+	memcpy(p, &v, sizeof(v));
 }
 
 static inline void write_i64(uint8_t *p, int64_t v)
@@ -131,48 +141,48 @@ static inline void write_i64(uint8_t *p, int64_t v)
 		v = __builtin_bswap64(v);
 	#endif
 	
-	__builtin_memcpy(p, &v, sizeof(v));
+	memcpy(p, &v, sizeof(v));
 }
 
 static inline void write_f32(uint8_t *p, float v)
 {
 	uint32_t u;
 
-	__builtin_memcpy(&u, &v, sizeof(u));
+	memcpy(&u, &v, sizeof(u));
 
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		u = __builtin_bswap32(u);
 	#endif
 
-	__builtin_memcpy(p, &u, sizeof(u));
+	memcpy(p, &u, sizeof(u));
 }
 
 static inline void write_f64(uint8_t *p, double v)
 {
 	uint64_t u;
 
-	__builtin_memcpy(&u, &v, sizeof(u));
+	memcpy(&u, &v, sizeof(u));
 
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		u = __builtin_bswap64(u);
 	#endif
 
-	__builtin_memcpy(p, &u, sizeof(u));
+	memcpy(p, &u, sizeof(u));
 }
 
 static inline void write_bytes(uint8_t *dst, const void *src, uint32_t len)
 {
-    __builtin_memcpy(dst, src, len);
+    memcpy(dst, src, len);
 } 
 
 static inline void write_raw(uint8_t *dst, const void *src, uint32_t len)
 {
-    __builtin_memcpy(dst, src, len);
+    memcpy(dst, src, len);
 }
 
 static inline void write_zero(uint8_t *dst, size_t len) 
 {
-	__builtin_memset(dst, 0x00, len);
+	memset(dst, 0, len);
 }
 
 static inline uint8_t read_u8(const uint8_t *p) {
@@ -182,7 +192,7 @@ static inline uint8_t read_u8(const uint8_t *p) {
 static inline uint16_t read_u16(const uint8_t *p) {
 	uint16_t v;
 	
-	__builtin_memcpy(&v, p, sizeof(v));
+	memcpy(&v, p, sizeof(v));
 	
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		v = __builtin_bswap16(v);
@@ -193,7 +203,7 @@ static inline uint16_t read_u16(const uint8_t *p) {
 
 static inline uint32_t read_u32(const uint8_t *p) {
 	uint32_t v;
-	__builtin_memcpy(&v, p, sizeof(v));
+	memcpy(&v, p, sizeof(v));
 	
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		v = __builtin_bswap32(v);
@@ -204,7 +214,7 @@ static inline uint32_t read_u32(const uint8_t *p) {
 
 static inline uint64_t read_u64(const uint8_t *p) {
 	uint64_t v;
-	__builtin_memcpy(&v, p, sizeof(v));
+	memcpy(&v, p, sizeof(v));
 	
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		v = __builtin_bswap64(v);
@@ -220,7 +230,7 @@ static inline int8_t read_i8(const uint8_t *p) {
 static inline int16_t read_i16(const uint8_t *p) {
 	int16_t v;
 	
-	__builtin_memcpy(&v, p, sizeof(v));
+	memcpy(&v, p, sizeof(v));
 	
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		v = __builtin_bswap16(v);
@@ -231,7 +241,7 @@ static inline int16_t read_i16(const uint8_t *p) {
 
 static inline int32_t read_i32(const uint8_t *p) {
 	int32_t v;
-	__builtin_memcpy(&v, p, sizeof(v));
+	memcpy(&v, p, sizeof(v));
 	
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		v = __builtin_bswap32(v);
@@ -242,7 +252,7 @@ static inline int32_t read_i32(const uint8_t *p) {
 
 static inline int64_t read_i64(const uint8_t *p) {
 	int64_t v;
-	__builtin_memcpy(&v, p, sizeof(v));
+	memcpy(&v, p, sizeof(v));
 	
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		v = __builtin_bswap64(v);
@@ -256,13 +266,13 @@ static inline float read_f32(const uint8_t *p)
 	uint32_t u;
 	float v;
 
-	__builtin_memcpy(&u, p, sizeof(u));
+	memcpy(&u, p, sizeof(u));
 
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		u = __builtin_bswap32(u);
 	#endif
 
-	__builtin_memcpy(&v, &u, sizeof(v));
+	memcpy(&v, &u, sizeof(v));
 
 	return v;
 }
@@ -272,25 +282,25 @@ static inline double read_f64(const uint8_t *p)
 	uint64_t u;
 	double v;
 
-	__builtin_memcpy(&u, p, sizeof(u));
+	memcpy(&u, p, sizeof(u));
 
 	#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		u = __builtin_bswap64(u);
 	#endif
 
-	__builtin_memcpy(&v, &u, sizeof(v));
+	memcpy(&v, &u, sizeof(v));
 
 	return v;
 }
 
 static inline void read_bytes(void *dst, const uint8_t *src, uint32_t len)
 {
-    __builtin_memcpy(dst, src, len);
+    memcpy(dst, src, len);
 }
 
 static inline void read_raw(void *dst, const uint8_t *src, uint32_t len)
 {
-    __builtin_memcpy(dst, src, len);
+    memcpy(dst, src, len);
 }
 
 #endif /* NET_RW_H */ 
