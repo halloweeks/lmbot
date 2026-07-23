@@ -8,7 +8,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_executable(client
     src/main.c
     src/connection.c
-    src/account.c
     src/log.c
     src/protocol.c
     src/des.c

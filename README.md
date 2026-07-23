@@ -74,7 +74,7 @@ build.bat
 Or compile directly with GCC:
 
 ```bat
-gcc -O2 -Iinclude src\main.c src\connection.c src\account.c src\log.c src\protocol.c src\des.c src\map_point.c src\command.c src\config.c -o client.exe -lws2_32
+gcc -O2 -Iinclude src\main.c src\connection.c src\log.c src\protocol.c src\des.c src\map_point.c src\command.c src\config.c -o client.exe -lws2_32
 ```
 
 The Windows build links against `ws2_32` (Winsock); CMake and `build.bat` handle

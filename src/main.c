@@ -8,7 +8,6 @@
 #endif
 
 #include "connection.h"
-#include "account.h"
 #include "log.h"
 #include "protocol.h"
 #include "net_rw.h"
