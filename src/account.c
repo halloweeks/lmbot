@@ -3,22 +3,20 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 
 AccountError LoadAccount(Connection *conn, const char *filename)
 {
-	int file = open(filename, O_RDONLY);
-	
-	if (file == -1) return ACC_ERR_FILE_OPEN;
-	
+	FILE *file = fopen(filename, "rb");
+
+	if (file == NULL) return ACC_ERR_FILE_OPEN;
+
 	uint8_t data[1024];
-	
-	ssize_t r = read(file, data, sizeof(data));
-	
-	close(file);
-	
-	if (r <= 0) {
+
+	size_t r = fread(data, 1, sizeof(data), file);
+
+	fclose(file);
+
+	if (r == 0) {
 		return ACC_ERR_FILE_READ;
 	}
 	

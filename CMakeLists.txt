@@ -22,3 +22,7 @@ target_compile_definitions(client PRIVATE
 )
 
 target_include_directories(client PRIVATE include)
+
+if(WIN32)
+    target_link_libraries(client PRIVATE ws2_32)
+endif()
