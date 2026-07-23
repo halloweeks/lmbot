@@ -33,3 +33,5 @@ jobs:
         path: |
           build/client
           build/client.exe
+          build/Debug/client.exe
+          build/Release/client.exe
