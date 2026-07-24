@@ -1,3 +1,0 @@
-/sdcard/lords-mobile-bot/build/CMakeFiles/client.dir
-/sdcard/lords-mobile-bot/build/CMakeFiles/edit_cache.dir
-/sdcard/lords-mobile-bot/build/CMakeFiles/rebuild_cache.dir

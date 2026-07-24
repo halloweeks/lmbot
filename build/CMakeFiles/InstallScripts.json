@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/sdcard/lords-mobile-bot/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
