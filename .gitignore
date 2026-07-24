@@ -1,1 +1,21 @@
 main.txt
+# Build output
+/build/
+/out/
+/bin/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Local configuration
+config.cfg
+
+# Personal notes
+ll.txt
+
+# Editor files
+*.swp
+*.tmp
