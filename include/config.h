@@ -5,5 +5,6 @@
 #include "items.h"
 
 bool LoadConfig(Connection *c, const char *filename);
+bool CreateDefaultConfig(const char *filename);
 
 #endif

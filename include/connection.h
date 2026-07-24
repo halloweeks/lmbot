@@ -813,9 +813,21 @@ typedef struct {
 	PacketStream stream;
 	// authentication
 	AuthInfo auth;
-	// game items
+	
+	/*
+	* TODO:
+	* This O(1) array indexes every possible game item ID (0-65535), but it is
+	* not memory efficient. Even though each Item is currently only 2 bytes,
+	* this array consumes about 128 KiB per Connection, while the bot only uses
+	* a small subset of items (e.g. shields, relocators, etc.).
+	*
+	* Replace this with a compact tracked-item table that stores only the items
+	* required by the bot, significantly reducing per-connection memory usage.
+	*/
 	Item items[MAX_ITEM_COUNT];
 	bool items_loaded;
+	
+	
 	// protocol state
 	ProtocolState protocol;
 	// outgoing packet buffer 
